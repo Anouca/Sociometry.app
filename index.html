@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Социометрийн Судалгааны Систем</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .active-tab { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: bold; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white; padding: 0; }
+            .max-w-6xl { max-width: 100% !important; width: 100%; margin: 0; padding: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen">
+
+    <div class="max-w-6xl mx-auto p-6">
+        <!-- Header -->
+        <header class="bg-white rounded-xl shadow-sm p-6 mb-6 flex justify-between items-center border border-gray-100 no-print">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Социометрийн Судалгааны Систем</h1>
+                <p class="text-sm text-gray-500">Я.Л.Морено & А.А.Роновын аргачлал</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="loadDemoData()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-2 rounded-lg border border-purple-200 transition">
+                    🧪 Туршилтын жишээ ачаалах
+                </button>
+                <button onclick="clearAllData()" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold px-3 py-2 rounded-lg border border-red-200 transition">
+                    🗑️ Цэвэрлэх
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-200 mb-6 bg-white rounded-t-xl px-4 no-print">
+            <button id="tab1-btn" onclick="switchTab(1)" class="py-4 px-6 active-tab transition">1. Анги ба Сурагчид</button>
+            <button id="tab2-btn" onclick="switchTab(2)" class="py-4 px-6 text-gray-500 transition">2. Сонголтууд & Матриц</button>
+            <button id="tab3-btn" onclick="switchTab(3)" class="py-4 px-6 text-gray-500 transition">3. Үр дүн, Диаграмм & Тайлан</button>
+            <button id="tab4-btn" onclick="switchTab(4)" class="py-4 px-6 text-gray-500 transition">📜 Түүх ба Хадгалагдсан</button>
+        </div>
+
+        <!-- TAB 1: Анги ба Сурагчид -->
+        <div id="tab1" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
+            <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center border-b pb-4">
+                <div class="w-full md:w-1/2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Сургууль / Ангийн нэр:</label>
+                    <input type="text" id="className" placeholder="Жишээ нь: 51-р сургууль 12Б анги" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="toggleBulkModal(true)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-2.5 rounded-lg border transition">
+                        📋 Жагсаалтаар нэмэх
+                    </button>
+                    <button onclick="addStudentRow()" class="bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold px-4 py-2.5 rounded-lg border border-blue-200 transition">
+                        ➕ Нэг сурагч нэмэх
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-bold text-gray-700 mb-3">Сурагчдын жагсаалт</h3>
+                <div class="overflow-x-auto border rounded-xl">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 border-b text-xs text-gray-600 uppercase">
+                            <tr>
+                                <th class="py-3 px-4 w-12 text-center">№</th>
+                                <th class="py-3 px-4">Сурагчийн нэр</th>
+                                <th class="py-3 px-4 w-40">Хүйс</th>
+                                <th class="py-3 px-4 w-20 text-center">Үйлдэл</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex flex-wrap justify-between items-center text-sm font-medium text-blue-900">
+                <div id="studentCountSummary">Нийт сурагч: <span class="font-bold text-blue-700">0</span></div>
+                <button onclick="goToChoicesTab()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-xs font-semibold transition">
+                    Сонголт ба Матриц хэсэг рүү шилжих ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: Сонголтууд & Матриц -->
+        <div id="tab2" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hidden space-y-8">
+            <div>
+                <h2 class="text-lg font-bold text-gray-800 mb-1">Сонголтууд оруулах & Социоматриц</h2>
+                <p class="text-xs text-gray-500">Сурагч бүрийн сонголтыг оруулмагц доод талын социоматриц шууд шинэчлэгдэнэ.</p>
+            </div>
+
+            <div id="choicesContainer" class="space-y-6"></div>
+
+            <div class="border-t pt-6">
+                <h3 class="font-bold text-sm text-gray-800 mb-3">🔢 Социоматриц Хүснэгт</h3>
+                <div class="overflow-x-auto border rounded-xl" id="matrixTableContainer"></div>
+            </div>
+
+            <div class="pt-4 border-t flex justify-end">
+                <button onclick="calculateResults(); switchTab(3);" class="bg-green-600 hover:bg-green-700 text-white font-medium px-8 py-3 rounded-lg text-sm transition shadow-sm">
+                    Бодолт хийж тайлан гаргах 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 3: Үр дүн, Диаграмм & Тайлан -->
+        <div id="tab3" class="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hidden space-y-8">
+            <div id="reportOutput"></div>
+            
+            <!-- Социограммын тойрог диаграмм -->
+            <div class="border-t pt-6">
+                <h3 class="font-bold text-base text-gray-800 mb-2">🔵 Социограммын Тойрог Диаграмм</h3>
+                
+                <div class="flex flex-wrap gap-4 text-xs font-medium text-gray-700 bg-gray-50 p-3 rounded-lg border mb-4">
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-green-500 inline-block"></span> 🟢 Харилцан эерэг (+/+)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-red-500 inline-block"></span> 🔴 Харилцан сөрөг (-/-)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 border-t border-dashed border-orange-500 inline-block"></span> 🟠 Нэг талын эерэг (+)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 border-t border-dashed border-black inline-block"></span> ⬛ Нэг талын сөрөг (-)</div>
+                </div>
+
+                <div class="flex justify-center bg-gray-50 p-4 rounded-xl border">
+                    <canvas id="sociogramCanvas" width="600" height="600" class="bg-white rounded-full shadow-inner border"></canvas>
+                </div>
+            </div>
+
+            <!-- Дүгнэлт Хэсэг -->
+            <div id="conclusionSection" class="border-t pt-6 space-y-4"></div>
+
+            <!-- Гарын үсэг ба баталгаажуулалт -->
+            <div class="border-t pt-8 mt-12 flex justify-between items-center text-xs text-gray-800">
+                <div>
+                    <strong>Тайлан боловсруулсан: Сэтгэл зүйч Н.Анударь</strong>
+                </div>
+                <div>
+                    <strong>Танилцсан АУБ: /.................................................../</strong>
+                </div>
+            </div>
+
+            <div class="no-print pt-4 flex justify-between">
+                <button onclick="saveCurrentToHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-semibold">
+                    💾 Энэ судалгааг түүхэнд хадгалах
+                </button>
+                <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white px-6 py-2 rounded-lg text-xs font-semibold">
+                    🖨️ Хэвлэх / PDF болгож хадгалах
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 4: Түүх -->
+        <div id="tab4" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hidden space-y-6">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h2 class="text-lg font-bold text-gray-700">📜 Өмнө нь авсан судалгааны түүх</h2>
+                <button onclick="loadDemoData(); switchTab(1);" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold px-4 py-2 rounded-lg border border-purple-200">
+                    🧪 Туршилтын жишээ ачаалах
+                </button>
+            </div>
+            <div id="historyList" class="space-y-3">
+                <p class="text-xs text-gray-400">Хадгалагдсан судалгаа одоогоор байхгүй байна.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bulk Import Modal -->
+    <div id="bulkModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-6 max-w-lg w-full space-y-4 shadow-xl">
+            <h3 class="font-bold text-gray-800 text-lg">Сурагчдыг олноор оруулах</h3>
+            <textarea id="bulkInput" rows="8" placeholder="Болд&#10;Саран&#10;Баяр" class="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleBulkModal(false)" class="px-4 py-2 border rounded-lg text-xs font-semibold text-gray-600">Цуцлах</button>
+                <button onclick="processBulkImport()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold">Оруулах</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let students = [
+            { name: "Баяр", gender: "male" },
+            { name: "Саран", gender: "female" },
+            { name: "Болд", gender: "male" },
+            { name: "Туяа", gender: "female" },
+            { name: "Золбоо", gender: "male" }
+        ];
+        let choices = {};
+
+        window.onload = () => {
+            renderStudentTable();
+            loadHistoryUI();
+        };
+
+        function switchTab(tabIndex) {
+            [1, 2, 3, 4].forEach(i => {
+                document.getElementById(`tab${i}`).classList.add('hidden');
+                document.getElementById(`tab${i}-btn`).classList.remove('active-tab');
+                document.getElementById(`tab${i}-btn`).classList.add('text-gray-500');
+            });
+            document.getElementById(`tab${tabIndex}`).classList.remove('hidden');
+            document.getElementById(`tab${tabIndex}-btn`).classList.add('active-tab');
+            document.getElementById(`tab${tabIndex}-btn`).classList.remove('text-gray-500');
+        }
+
+        function renderStudentTable() {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            let male = 0, female = 0;
+
+            students.forEach((student, index) => {
+                if (student.gender === 'male') male++;
+                if (student.gender === 'female') female++;
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50/50";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 text-center text-gray-500 font-medium text-xs">${index + 1}</td>
+                    <td class="py-2.5 px-4">
+                        <input type="text" value="${student.name}" onchange="updateStudentName(${index}, this.value)" class="w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 text-sm py-1 outline-none">
+                    </td>
+                    <td class="py-2.5 px-4">
+                        <select onchange="updateStudentGender(${index}, this.value)" class="border rounded p-1 text-xs bg-white">
+                            <option value="female" ${student.gender === 'female' ? 'selected' : ''}>Эмэгтэй 👧</option>
+                            <option value="male" ${student.gender === 'male' ? 'selected' : ''}>Эрэгтэй 👦</option>
+                        </select>
+                    </td>
+                    <td class="py-2.5 px-4 text-center">
+                        <button onclick="removeStudent(${index})" class="text-red-500 hover:text-red-700 p-1">❌</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('studentCountSummary').innerHTML = `Нийт сурагч: <span class="font-bold text-blue-700">${students.length}</span> (Эмэгтэй: ${female}, Эрэгтэй: ${male})`;
+        }
+
+        function addStudentRow() {
+            students.push({ name: `Сурагч ${students.length + 1}`, gender: "female" });
+            renderStudentTable();
+        }
+
+        function removeStudent(index) {
+            students.splice(index, 1);
+            renderStudentTable();
+        }
+
+        function updateStudentName(index, value) { students[index].name = value.trim(); }
+        function updateStudentGender(index, value) { students[index].gender = value; renderStudentTable(); }
+
+        function toggleBulkModal(show) {
+            document.getElementById('bulkModal').classList.toggle('hidden', !show);
+            document.getElementById('bulkModal').classList.toggle('flex', show);
+        }
+
+        function processBulkImport() {
+            const text = document.getElementById('bulkInput').value;
+            text.split('\n').map(s => s.trim()).filter(s => s.length > 0).forEach(name => {
+                students.push({ name, gender: 'female' });
+            });
+            document.getElementById('bulkInput').value = '';
+            toggleBulkModal(false);
+            renderStudentTable();
+        }
+
+        function loadDemoData() {
+            document.getElementById('className').value = "51-р сургууль 12Б";
+            students = [
+                { name: "Баяр", gender: "male" },
+                { name: "Саран", gender: "female" },
+                { name: "Болд", gender: "male" },
+                { name: "Туяа", gender: "female" },
+                { name: "Золбоо", gender: "male" }
+            ];
+            choices = {
+                0: { pos: [1, 2], neg: [4] },
+                1: { pos: [0, 3], neg: [] },
+                2: { pos: [0], neg: [3] },
+                3: { pos: [1], neg: [2] },
+                4: { pos: [], neg: [0] }
+            };
+            renderStudentTable();
+            alert("Туршилтын өгөгдөл амжилттай ачааллаа!");
+        }
+
+        function clearAllData() {
+            if (confirm("Бүх өгөгдлийг цэвэрлэх үү?")) {
+                students = [];
+                choices = {};
+                document.getElementById('className').value = "";
+                renderStudentTable();
+            }
+        }
+
+        function goToChoicesTab() {
+            if (students.length < 2) return alert("Багадаа 2 сурагч оруулна уу.");
+            if (Object.keys(choices).length === 0) {
+                students.forEach((_, idx) => choices[idx] = { pos: [], neg: [] });
+            }
+            renderChoicesInput();
+            renderLiveMatrix();
+            switchTab(2);
+        }
+
+        function renderChoicesInput() {
+            const container = document.getElementById('choicesContainer');
+            container.innerHTML = '';
+            students.forEach((student, idx) => {
+                let optionsHtml = `<option value="">-- Сонгох --</option>`;
+                students.forEach((s, i) => {
+                    if (i !== idx) optionsHtml += `<option value="${i}">${i + 1}. ${s.name} (${s.gender === 'female' ? '👧' : '👦'})</option>`;
+                });
+
+                const posVals = choices[idx]?.pos || [];
+                const negVals = choices[idx]?.neg || [];
+
+                const card = document.createElement('div');
+                card.className = "p-4 border rounded-xl bg-gray-50/50 space-y-3";
+                card.innerHTML = `
+                    <div class="font-bold text-gray-800 text-base border-b pb-2">${idx + 1}. ${student.name} (${student.gender === 'female' ? '👧' : '👦'})</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                            <label class="block text-xs font-semibold text-green-800 mb-2">🟢 Эерэг сонголт (+)</label>
+                            <div class="space-y-1.5">
+                                ${[0, 1, 2].map(slot => `
+                                    <select onchange="updateChoice(${idx}, 'pos', ${slot}, this.value)" class="w-full border rounded p-1.5 text-xs bg-white">
+                                        ${optionsHtml.replace(`value="${posVals[slot]}"`, `value="${posVals[slot]}" selected`)}
+                                    </select>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="bg-red-50 p-3 rounded-lg border border-red-100">
+                            <label class="block text-xs font-semibold text-red-800 mb-2">🔴 Сөрөг сонголт (-)</label>
+                            <div class="space-y-1.5">
+                                ${[0, 1, 2].map(slot => `
+                                    <select onchange="updateChoice(${idx}, 'neg', ${slot}, this.value)" class="w-full border rounded p-1.5 text-xs bg-white">
+                                        ${optionsHtml.replace(`value="${negVals[slot]}"`, `value="${negVals[slot]}" selected`)}
+                                    </select>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateChoice(studentIdx, type, slot, val) {
+            if (!choices[studentIdx]) choices[studentIdx] = { pos: [], neg: [] };
+            choices[studentIdx][type][slot] = val !== "" ? parseInt(val) : null;
+            renderLiveMatrix();
+        }
+
+        function renderLiveMatrix() {
+            const container = document.getElementById('matrixTableContainer');
+            let headerCells = students.map((s, i) => `<th class="py-2 px-3 border text-center font-bold">${i + 1}</th>`).join('');
+            let rows = students.map((s1, i) => {
+                let cells = students.map((s2, j) => {
+                    if (i === j) return `<td class="py-2 px-3 border text-center bg-gray-200 font-bold">x</td>`;
+                    let isPos = choices[i]?.pos?.includes(j);
+                    let isNeg = choices[i]?.neg?.includes(j);
+                    if (isPos) return `<td class="py-2 px-3 border text-center font-bold text-green-600 bg-green-50">+1</td>`;
+                    if (isNeg) return `<td class="py-2 px-3 border text-center font-bold text-red-600 bg-red-50">-1</td>`;
+                    return `<td class="py-2 px-3 border text-center text-gray-300">0</td>`;
+                }).join('');
+
+                return `
+                    <tr>
+                        <td class="py-2 px-3 border font-semibold bg-gray-50">${i + 1}. ${s1.name}</td>
+                        ${cells}
+                    </tr>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <table class="w-full text-xs text-left border-collapse">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="py-2 px-3 border">Сурагч</th>
+                            ${headerCells}
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function calculateResults() {
+            const n = students.length;
+            let R_pos = new Array(n).fill(0);
+            let R_neg = new Array(n).fill(0);
+            let R_ii_pos = 0;
+
+            Object.keys(choices).forEach(srcIdx => {
+                srcIdx = parseInt(srcIdx);
+                const pList = (choices[srcIdx].pos || []).filter(v => v !== null && !isNaN(v));
+                const nList = (choices[srcIdx].neg || []).filter(v => v !== null && !isNaN(v));
+
+                pList.forEach(targetIdx => {
+                    R_pos[targetIdx]++;
+                    if (choices[targetIdx] && choices[targetIdx].pos && choices[targetIdx].pos.includes(srcIdx)) R_ii_pos++;
+                });
+                nList.forEach(targetIdx => R_neg[targetIdx]++);
+            });
+
+            const G = (R_ii_pos / (n * (n - 1))).toFixed(2);
+            let leaders = [], isolated = [], singleChoice = [];
+
+            let studentMetrics = students.map((s, i) => {
+                const pos = R_pos[i];
+                const neg = R_neg[i];
+                const sum = pos + neg;
+                const E = sum === 0 ? 0 : (pos / sum);
+                const S = (pos - neg) / (n - 1);
+
+                if (pos >= 3 && pos > neg) leaders.push(i);
+                else if (pos === 0 && neg === 0) isolated.push(i);
+                if (pos === 1) singleChoice.push(i);
+
+                return { id: i + 1, name: s.name, gender: s.gender, pos, neg, E: E.toFixed(2), S: S.toFixed(2) };
+            });
+
+            renderReport({
+                className: document.getElementById('className').value || 'Анги хамт олон',
+                n,
+                femaleCount: students.filter(s => s.gender === 'female').length,
+                maleCount: students.filter(s => s.gender === 'male').length,
+                G,
+                studentMetrics,
+                leaders,
+                isolated
+            });
+
+            drawSociogram(studentMetrics, leaders, isolated);
+            renderConclusions(parseFloat(G), leaders, isolated, singleChoice, studentMetrics, R_ii_pos);
+        }
+
+        function renderReport(data) {
+            let tableRows = data.studentMetrics.map(s => `
+                <tr class="border-b text-center">
+                    <td class="py-2 px-3 text-left font-medium">${s.id}. ${s.name} (${s.gender === 'female' ? '👧 Эм' : '👦 Эр'})</td>
+                    <td class="py-2 px-3 text-green-600 font-semibold">${s.pos}</td>
+                    <td class="py-2 px-3 text-red-600 font-semibold">${s.neg}</td>
+                    <td class="py-2 px-3 font-mono bg-blue-50/30">${s.E}</td>
+                    <td class="py-2 px-3 font-mono ${s.S < 0 ? 'text-red-500 font-bold' : ''}">${s.S}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('reportOutput').innerHTML = `
+                <div class="border-b pb-4 mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">${data.className} - Социометрийн Судалгааны Тайлан</h2>
+                </div>
+
+                <div class="bg-blue-50/70 p-4 rounded-xl border border-blue-100 mb-6">
+                    <h3 class="font-bold text-xs text-blue-900 mb-1 uppercase">🎯 <strong>ЗОРИЛГО:</strong></h3>
+                    <p class="text-xs text-blue-950 leading-relaxed">
+                        Анги хамт олны дотоод харилцаа, бүлэг доторх жижиг бүлэг болон бүлэгт харьяалагдахгүй байгаа сурагчдыг тодруулах зорилгоор уг социометрийн судалгааны аргыг ашиглан судлах.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-2">
+                    <h3 class="font-bold text-xs text-gray-800 uppercase">📊 СОЦИОМЕТРИЙН СУДАЛГААНЫ ҮР ДҮН</h3>
+                    <p class="text-xs text-gray-700">
+                        <strong>Түүврийн бүтэц:</strong> Нийт <strong>${data.n}</strong> сурагч оролцсон (Эмэгтэй: <strong>${data.femaleCount}</strong>, Эрэгтэй: <strong>${data.maleCount}</strong>).
+                    </p>
+                </div>
+
+                <h3 class="font-bold text-xs text-gray-800 mb-2">Социометрица Матриц & Индексүүд</h3>
+                <div class="overflow-x-auto border rounded-xl mb-6">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-gray-100 border-b text-center">
+                            <tr>
+                                <th class="py-2 px-3 text-left">Сурагчийн нэр</th>
+                                <th class="py-2 px-3">Эерэг (ΣR+)</th>
+                                <th class="py-2 px-3">Сөрөг (ΣR-)</th>
+                                <th class="py-2 px-3">Чанарын индекс (E<sub>i</sub>)</th>
+                                <th class="py-2 px-3">Статусын индекс (S<sub>i</sub>)</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function drawSociogram(studentMetrics, leaders, isolated) {
+            const canvas = document.getElementById('sociogramCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1.5;
+            [80, 170, 250].forEach(radius => {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.stroke();
+            });
+
+            let positions = {};
+            studentMetrics.forEach((student, i) => {
+                let radius = 170;
+                if (leaders.includes(i)) radius = 70;
+                else if (isolated.includes(i)) radius = 250;
+
+                const angle = (i / studentMetrics.length) * 2 * Math.PI;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                positions[i] = { x, y, name: student.name, gender: student.gender };
+            });
+
+            const n = studentMetrics.length;
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    let i_pos_j = choices[i]?.pos?.includes(j);
+                    let j_pos_i = choices[j]?.pos?.includes(i);
+                    let i_neg_j = choices[i]?.neg?.includes(j);
+                    let j_neg_i = choices[j]?.neg?.includes(i);
+
+                    if (i_pos_j && j_pos_i) {
+                        drawLine(ctx, positions[i], positions[j], '#22c55e', false, 2);
+                    } else if (i_neg_j && j_neg_i) {
+                        drawLine(ctx, positions[i], positions[j], '#ef4444', false, 2);
+                    } else {
+                        if (i_pos_j || j_pos_i) drawLine(ctx, positions[i], positions[j], '#f97316', true, 1.5);
+                        if (i_neg_j || j_neg_i) drawLine(ctx, positions[i], positions[j], '#000000', true, 1.2);
+                    }
+                }
+            }
+
+            Object.keys(positions).forEach(i => {
+                const pos = positions[i];
+                ctx.fillStyle = pos.gender === 'male' ? '#2563eb' : '#ec4899';
+
+                if (pos.gender === 'male') {
+                    ctx.fillRect(pos.x - 10, pos.y - 10, 20, 20);
+                } else {
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y - 12);
+                    ctx.lineTo(pos.x - 10, pos.y + 10);
+                    ctx.lineTo(pos.x + 10, pos.y + 10);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#1f2937';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(pos.name, pos.x, pos.y + 22);
+            });
+        }
+
+        function drawLine(ctx, p1, p2, color, isDashed, width) {
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            if (isDashed) ctx.setLineDash([5, 5]);
+            else ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function renderConclusions(G, leaders, isolated, singleChoice, metrics, R_ii_pos) {
+            const leaderNames = leaders.map(i => metrics[i].name).join(', ') || 'Байхгүй';
+            const isolatedNames = isolated.map(i => metrics[i].name).join(', ') || 'Байхгүй';
+            const singleChoiceNames = singleChoice.map(i => metrics[i].name).join(', ') || 'Байхгүй';
+            const manyChoiceNames = metrics.filter(m => m.pos >= 2).map(m => m.name).join(', ') || 'Байхгүй';
+
+            let mainText = "";
+
+            if (G < 0.15) {
+                // Анхаарах шаардлагатай
+                mainText = `Энэ ангийн социометрийн судалгааны үр дүнгээс үзэхэд <strong>бүлгийн нягтралын индекс</strong> <strong>${G}</strong> байгаа нь бүлгийн нягтрал <strong>сул</strong>, сурагч хооронд харилцан сонголт <strong>цөөн</strong>, бүлгийн нэгдмэл байдлыг дэмжих ажил хэрэгтэй байгааг харуулж байна.`;
+            } else if (G < 0.25) {
+                // Дундаж (Хөөрхөн анхаарчихвал конньюктив байдал сайжрах)
+                mainText = `Энэ ангийн социометрийн судалгааны үр дүнгээс үзэхэд <strong>бүлгийн нягтралын индекс</strong> <strong>${G}</strong> байгаа нь бүлгийн нягтрал <strong>дундаж</strong>, сурагч хооронд харилцан сонголт <strong>дунд зэрэг</strong>, бүлгийн нэгдмэл байдлыг дэмжих ажил хэрэгтэй байгааг харуулж байна. Анхаарч ажиллавал конньюктив (эерэг) байдал хурдан сайжрах боломжтой.`;
+            } else {
+                // Өндөр
+                mainText = `Энэ ангийн социометрийн судалгааны үр дүнгээс үзэхэд <strong>бүлгийн нягтралын индекс</strong> <strong>${G}</strong> байгаа нь бүлгийн нягтрал <strong>өндөр</strong>, сурагч хооронд харилцан сонголт <strong>сайн</strong>, анги хамт олны нэгдмэл байдал бүрэлдсэнийг харуулж байна.`;
+            }
+
+            document.getElementById('conclusionSection').innerHTML = `
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase">📌 <strong>ДҮГНЭЛТ</strong></h3>
+                    
+                    <div class="text-xs text-gray-800 leading-relaxed space-y-3">
+                        <p>${mainText}</p>
+
+                        <p>Харилцан биесээ сонгосон сонголт <strong>${R_ii_pos}</strong>, дан сонголт <strong>${singleChoice.length}</strong> байгаа нь ангийн дотор бие биенээ харилцан сонгож, дэмждэг сурагчид цөөн ч, зарим сурагч тусгаарлагдсан эсвэл ангийн идэвхтэй конньюктив харилцаанд орохгүй байх хандлагатай байгааг илтгэж байна. Тойргийн төвөөс гадна үлдэж буй сурагчдыг нийгмийн оролцоонд татан оруулах шаардлагатай.</p>
+
+                        <ul class="list-disc pl-5 space-y-2 mt-2">
+                            <li><strong>Дан сонголттой сурагчид</strong>- (${singleChoiceNames}): Ангийн үйл ажиллагаанд хосоор болон жижиг бүлгээр ажиллуулах.</li>
+                            <li><strong>Олон сонголт авсан сурагчид</strong>- (${manyChoiceNames}): "Бүлгийн холбооны гүүр болгох", "Үе тэнгийнхэн, анги хамт олондоо нөлөөлөх" гэх мэт зорилгоор бүлэг зохион байгуулах.</li>
+                            <li><strong>Огт сонголтгүй сурагчид</strong>- (${isolatedNames}): Байгаа бөгөөд тэдгээрийг бүлэгт татан оруулах, хамт олонтойгоо холбоо тогтооход дэмжлэг үзүүлэх шаардлагатай.</li>
+                            <li><strong>Манлайлагч сурагчид</strong>- (${leaderNames}): Нь анги хамт олныхоо хүндэтгэлийг хүлээж, олон сонголт авсан бөгөөд тэдний нөлөөг бүтээлчээр ашиглаж, бүлгийн идэвхтэй ажиллагаанд оролцуулах нь зүйтэй.</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        // History Management
+        function saveCurrentToHistory() {
+            const className = document.getElementById('className').value || 'Анги';
+            const history = JSON.parse(localStorage.getItem('socio_history') || '[]');
+            history.push({ date: new Date().toLocaleDateString(), className, students, choices });
+            localStorage.setItem('socio_history', JSON.stringify(history));
+            alert('Судалгаа түүхэнд амжилттай хадгалагдлаа!');
+            loadHistoryUI();
+        }
+
+        function loadHistoryUI() {
+            const history = JSON.parse(localStorage.getItem('socio_history') || '[]');
+            const container = document.getElementById('historyList');
+            if (history.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400">Хадгалагдсан судалгаа байхгүй байна.</p>`;
+                return;
+            }
+            container.innerHTML = history.map((item, index) => `
+                <div class="p-4 border rounded-xl flex justify-between items-center bg-gray-50">
+                    <div>
+                        <div class="font-bold text-sm text-gray-800">${item.className}</div>
+                        <div class="text-xs text-gray-500">${item.date} | Нийт сурагч: ${item.students.length}</div>
+                    </div>
+                    <button onclick="restoreHistory(${index})" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold">Ачаалах</button>
+                </div>
+            `).join('');
+        }
+
+        function restoreHistory(index) {
+            const history = JSON.parse(localStorage.getItem('socio_history') || '[]');
+            const item = history[index];
+            document.getElementById('className').value = item.className;
+            students = item.students;
+            choices = item.choices;
+            renderStudentTable();
+            alert('Судалгаа амжилттай сэргээгдлээ!');
+            switchTab(1);
+        }
+    </script>
+</body>
+</html>
