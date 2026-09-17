@@ -87,14 +87,17 @@
         <div id="tab2" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hidden space-y-8">
             <div>
                 <h2 class="text-lg font-bold text-gray-800 mb-1">Сонголтууд оруулах & Социоматриц</h2>
-                <p class="text-xs text-gray-500">Сурагч бүрийн сонголтыг оруулмагц доод талын социоматриц шууд шинэчлэгдэнэ.</p>
+                <p class="text-xs text-gray-500">Сурагч бүрийн эерэг болон сөрөг сонголтыг оруулна уу. (+ Сонголт нэмэх товчлуур дээр даран хэдэн ч сурагч нэмж болно)</p>
             </div>
 
             <div id="choicesContainer" class="space-y-6"></div>
 
-            <div class="border-t pt-6">
-                <h3 class="font-bold text-sm text-gray-800 mb-3">🔢 Социоматриц Хүснэгт</h3>
+            <div class="border-t pt-6 space-y-4">
+                <h3 class="font-bold text-sm text-gray-800">🔢 Социоматриц Хүснэгт</h3>
                 <div class="overflow-x-auto border rounded-xl" id="matrixTableContainer"></div>
+                
+                <!-- Социоматрицын доорх Бүлгийн Дүгнэлт -->
+                <div id="matrixGroupAnalysis" class="bg-gray-50 p-4 rounded-xl border space-y-2 text-xs"></div>
             </div>
 
             <div class="pt-4 border-t flex justify-end">
@@ -137,13 +140,18 @@
                 </div>
             </div>
 
-            <div class="no-print pt-4 flex justify-between">
+            <div class="no-print pt-4 flex flex-wrap gap-2 justify-between">
                 <button onclick="saveCurrentToHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-xs font-semibold">
-                    💾 Энэ судалгааг түүхэнд хадгалах
+                    💾 Түүхэнд хадгалах
                 </button>
-                <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white px-6 py-2 rounded-lg text-xs font-semibold">
-                    🖨️ Хэвлэх / PDF болгож хадгалах
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="exportToWord()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm">
+                        📄 Word (.docx) болгож татах
+                    </button>
+                    <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white px-6 py-2 rounded-lg text-xs font-semibold">
+                        🖨️ Хэвлэх / PDF
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -239,6 +247,7 @@
 
         function removeStudent(index) {
             students.splice(index, 1);
+            delete choices[index];
             renderStudentTable();
         }
 
@@ -291,9 +300,9 @@
 
         function goToChoicesTab() {
             if (students.length < 2) return alert("Багадаа 2 сурагч оруулна уу.");
-            if (Object.keys(choices).length === 0) {
-                students.forEach((_, idx) => choices[idx] = { pos: [], neg: [] });
-            }
+            students.forEach((_, idx) => {
+                if (!choices[idx]) choices[idx] = { pos: [], neg: [] };
+            });
             renderChoicesInput();
             renderLiveMatrix();
             switchTab(2);
@@ -302,44 +311,72 @@
         function renderChoicesInput() {
             const container = document.getElementById('choicesContainer');
             container.innerHTML = '';
-            students.forEach((student, idx) => {
-                let optionsHtml = `<option value="">-- Сонгох --</option>`;
-                students.forEach((s, i) => {
-                    if (i !== idx) optionsHtml += `<option value="${i}">${i + 1}. ${s.name} (${s.gender === 'female' ? '👧' : '👦'})</option>`;
-                });
 
-                const posVals = choices[idx]?.pos || [];
-                const negVals = choices[idx]?.neg || [];
+            students.forEach((student, idx) => {
+                if (!choices[idx]) choices[idx] = { pos: [], neg: [] };
+                const posVals = choices[idx].pos || [];
+                const negVals = choices[idx].neg || [];
 
                 const card = document.createElement('div');
                 card.className = "p-4 border rounded-xl bg-gray-50/50 space-y-3";
                 card.innerHTML = `
-                    <div class="font-bold text-gray-800 text-base border-b pb-2">${idx + 1}. ${student.name} (${student.gender === 'female' ? '👧' : '👦'})</div>
+                    <div class="font-bold text-gray-800 text-base border-b pb-2">${idx + 1}. ${student.name} (${student.gender === 'female' ? '👧 Эм' : '👦 Эр'})</div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-green-50 p-3 rounded-lg border border-green-100">
-                            <label class="block text-xs font-semibold text-green-800 mb-2">🟢 Эерэг сонголт (+)</label>
-                            <div class="space-y-1.5">
-                                ${[0, 1, 2].map(slot => `
-                                    <select onchange="updateChoice(${idx}, 'pos', ${slot}, this.value)" class="w-full border rounded p-1.5 text-xs bg-white">
-                                        ${optionsHtml.replace(`value="${posVals[slot]}"`, `value="${posVals[slot]}" selected`)}
-                                    </select>
-                                `).join('')}
+                        <div class="bg-green-50 p-3 rounded-lg border border-green-100 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-semibold text-green-800">🟢 Эерэг сонголтууд (+)</label>
+                                <button onclick="addChoiceSlot(${idx}, 'pos')" class="bg-green-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-green-700">+ Сонголт нэмэх</button>
+                            </div>
+                            <div id="pos-slots-${idx}" class="space-y-1.5">
+                                ${renderSlotSelects(idx, 'pos', posVals)}
                             </div>
                         </div>
-                        <div class="bg-red-50 p-3 rounded-lg border border-red-100">
-                            <label class="block text-xs font-semibold text-red-800 mb-2">🔴 Сөрөг сонголт (-)</label>
-                            <div class="space-y-1.5">
-                                ${[0, 1, 2].map(slot => `
-                                    <select onchange="updateChoice(${idx}, 'neg', ${slot}, this.value)" class="w-full border rounded p-1.5 text-xs bg-white">
-                                        ${optionsHtml.replace(`value="${negVals[slot]}"`, `value="${negVals[slot]}" selected`)}
-                                    </select>
-                                `).join('')}
+                        <div class="bg-red-50 p-3 rounded-lg border border-red-100 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-semibold text-red-800">🔴 Сөрөг сонголтууд (-)</label>
+                                <button onclick="addChoiceSlot(${idx}, 'neg')" class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-red-700">+ Сонголт нэмэх</button>
+                            </div>
+                            <div id="neg-slots-${idx}" class="space-y-1.5">
+                                ${renderSlotSelects(idx, 'neg', negVals)}
                             </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
+        }
+
+        function renderSlotSelects(studentIdx, type, currentVals) {
+            if (currentVals.length === 0) currentVals = [null];
+            return currentVals.map((val, slotIdx) => {
+                let optionsHtml = `<option value="">-- Сонгох --</option>`;
+                students.forEach((s, i) => {
+                    if (i !== studentIdx) {
+                        const selected = (val === i) ? 'selected' : '';
+                        optionsHtml += `<option value="${i}" ${selected}>${i + 1}. ${s.name} (${s.gender === 'female' ? '👧' : '👦'})</option>`;
+                    }
+                });
+                return `
+                    <div class="flex gap-1 items-center">
+                        <select onchange="updateChoice(${studentIdx}, '${type}', ${slotIdx}, this.value)" class="w-full border rounded p-1.5 text-xs bg-white">
+                            ${optionsHtml}
+                        </select>
+                        <button onclick="removeChoiceSlot(${studentIdx}, '${type}', ${slotIdx})" class="text-red-500 font-bold px-1.5 text-xs hover:bg-red-100 rounded">❌</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addChoiceSlot(studentIdx, type) {
+            if (!choices[studentIdx]) choices[studentIdx] = { pos: [], neg: [] };
+            choices[studentIdx][type].push(null);
+            renderChoicesInput();
+        }
+
+        function removeChoiceSlot(studentIdx, type, slotIdx) {
+            choices[studentIdx][type].splice(slotIdx, 1);
+            renderChoicesInput();
+            renderLiveMatrix();
         }
 
         function updateChoice(studentIdx, type, slot, val) {
@@ -379,6 +416,45 @@
                     </thead>
                     <tbody>${rows}</tbody>
                 </table>
+            `;
+
+            calculateMatrixGroups();
+        }
+
+        function calculateMatrixGroups() {
+            const n = students.length;
+            let formalGroupCount = 1; // Анги хамт олон
+            let mutualPairs = 0;
+            let informalGroupCount = 0;
+
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    if (choices[i]?.pos?.includes(j) && choices[j]?.pos?.includes(i)) {
+                        mutualPairs++;
+                    }
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                for (let j = i + 1; j < n; j++) {
+                    for (let k = j + 1; k < n; k++) {
+                        let i_j = choices[i]?.pos?.includes(j) || choices[j]?.pos?.includes(i);
+                        let j_k = choices[j]?.pos?.includes(k) || choices[k]?.pos?.includes(j);
+                        let k_i = choices[k]?.pos?.includes(i) || choices[i]?.pos?.includes(k);
+                        if (i_j && j_k && k_i) informalGroupCount++;
+                    }
+                }
+            }
+
+            document.getElementById('matrixGroupAnalysis').innerHTML = `
+                <div class="font-bold text-gray-800 border-b pb-1">📋 Социоматрицын Бүлгийн Тооцоо & Дүгнэлт:</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <p>📌 <strong>Албан ёсны бүлэг:</strong> 1 (Анги хамт олон - ${n} сурагч)</p>
+                    <p>👥 <strong>Албан ёсны бус бичил бүлэг:</strong> ${informalGroupCount} (Харилцан эерэг хос: ${mutualPairs})</p>
+                </div>
+                <p class="text-gray-700 bg-white p-2 rounded border mt-1">
+                    <strong>Дүгнэлт:</strong> Социоматрицаас харахад тус ангид албан ёсны 1 бүлгийн хүрээнд харилцан бие биенээ сонгосон <strong>${mutualPairs}</strong> хос харилцаа болон <strong>${informalGroupCount}</strong> албан ёсны бус бичил бүлэг үүссэн байна.
+                </p>
             `;
         }
 
@@ -449,16 +525,16 @@
                 </div>
 
                 <div class="bg-blue-50/70 p-4 rounded-xl border border-blue-100 mb-6">
-                    <h3 class="font-bold text-xs text-blue-900 mb-1 uppercase">🎯 <strong>ЗОРИЛГО:</strong></h3>
+                    <h3 class="font-bold text-xs text-blue-900 mb-1 uppercase">🎯 ЗОРИЛГО:</h3>
                     <p class="text-xs text-blue-950 leading-relaxed">
-                        Анги хамт олны дотоод харилцаа, бүлэг доторх жижиг бүлэг болон бүлэгт харьяалагдахгүй байгаа сурагчдыг тодруулах зорилгоор уг социометрийн судалгааны аргыг ашиглан судлах.
+                        Анги хамт олны албан ёсны бүлэг болон түүний дотор үүссэн албан ёсны бус бичил бүлгүүдийн бүтцийг социометрийн аргаар тодорхойлох.
                     </p>
                 </div>
 
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6 space-y-2">
-                    <h3 class="font-bold text-xs text-gray-800 uppercase">📊 СОЦИОМЕТРИЙН СУДАЛГААНЫ ҮР ДҮН</h3>
+                    <h3 class="font-bold text-xs text-gray-800 uppercase">📊 ТҮҮВРИЙН БҮТЭЦ</h3>
                     <p class="text-xs text-gray-700">
-                        <strong>Түүврийн бүтэц:</strong> Нийт <strong>${data.n}</strong> сурагч оролцсон (Эмэгтэй: <strong>${data.femaleCount}</strong>, Эрэгтэй: <strong>${data.maleCount}</strong>).
+                        Нийт сурагчид: <strong>${data.n}</strong> (Эмэгтэй: <strong>${data.femaleCount}</strong>, Эрэгтэй: <strong>${data.maleCount}</strong>).
                     </p>
                 </div>
 
@@ -568,42 +644,75 @@
             const leaderNames = leaders.map(i => metrics[i].name).join(', ') || 'Байхгүй';
             const isolatedNames = isolated.map(i => metrics[i].name).join(', ') || 'Байхгүй';
             const singleChoiceNames = singleChoice.map(i => metrics[i].name).join(', ') || 'Байхгүй';
-            const manyChoiceNames = metrics.filter(m => m.pos >= 2).map(m => m.name).join(', ') || 'Байхгүй';
 
-            let mainText = "";
-
+            let cohesionText = "";
             if (G < 0.15) {
-                // Анхаарах шаардлагатай
-                mainText = `Энэ ангийн социометрийн судалгааны үр дүнгээс үзэхэд <strong>бүлгийн нягтралын индекс</strong> <strong>${G}</strong> байгаа нь бүлгийн нягтрал <strong>сул</strong>, сурагч хооронд харилцан сонголт <strong>цөөн</strong>, бүлгийн нэгдмэл байдлыг дэмжих ажил хэрэгтэй байгааг харуулж байна.`;
+                cohesionText = `Бүлгийн нягтралын индекс <strong>${G}</strong> байгаа нь албан ёсны бүлгийн нэгдмэл байдал <strong>сул</strong>, сурагч хооронд харилцан сонголт цөөн байгааг харуулж байна.`;
             } else if (G < 0.25) {
-                // Дундаж (Хөөрхөн анхаарчихвал конньюктив байдал сайжрах)
-                mainText = `Энэ ангийн социометрийн судалгааны үр дүнгээс үзэхэд <strong>бүлгийн нягтралын индекс</strong> <strong>${G}</strong> байгаа нь бүлгийн нягтрал <strong>дундаж</strong>, сурагч хооронд харилцан сонголт <strong>дунд зэрэг</strong>, бүлгийн нэгдмэл байдлыг дэмжих ажил хэрэгтэй байгааг харуулж байна. Анхаарч ажиллавал конньюктив (эерэг) байдал хурдан сайжрах боломжтой.`;
+                cohesionText = `Бүлгийн нягтралын индекс <strong>${G}</strong> байгаа нь албан ёсны бүлгийн нэгдмэл байдал <strong>дундаж</strong> байгааг харуулж байна.`;
             } else {
-                // Өндөр
-                mainText = `Энэ ангийн социометрийн судалгааны үр дүнгээс үзэхэд <strong>бүлгийн нягтралын индекс</strong> <strong>${G}</strong> байгаа нь бүлгийн нягтрал <strong>өндөр</strong>, сурагч хооронд харилцан сонголт <strong>сайн</strong>, анги хамт олны нэгдмэл байдал бүрэлдсэнийг харуулж байна.`;
+                cohesionText = `Бүлгийн нягтралын индекс <strong>${G}</strong> байгаа нь албан ёсны бүлгийн нэгдмэл байдал <strong>сайн, өндөр</strong> байгааг илтгэж байна.`;
             }
 
             document.getElementById('conclusionSection').innerHTML = `
                 <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
-                    <h3 class="text-sm font-bold text-gray-900 uppercase">📌 <strong>ДҮГНЭЛТ</strong></h3>
+                    <h3 class="text-sm font-bold text-gray-900 uppercase">📌 ДҮГНЭЛТ & ЗӨВЛӨМЖ</h3>
                     
                     <div class="text-xs text-gray-800 leading-relaxed space-y-3">
-                        <p>${mainText}</p>
+                        <p>${cohesionText}</p>
+                        
+                        <p>Харилцан биесээ сонгосон сонголт <strong>${R_ii_pos}</strong>, дан сонголттой сурагч <strong>${singleChoice.length}</strong> байна.</p>
 
-                        <p>Харилцан биесээ сонгосон сонголт <strong>${R_ii_pos}</strong>, дан сонголт <strong>${singleChoice.length}</strong> байгаа нь ангийн дотор бие биенээ харилцан сонгож, дэмждэг сурагчид цөөн ч, зарим сурагч тусгаарлагдсан эсвэл ангийн идэвхтэй конньюктив харилцаанд орохгүй байх хандлагатай байгааг илтгэж байна. Тойргийн төвөөс гадна үлдэж буй сурагчдыг нийгмийн оролцоонд татан оруулах шаардлагатай.</p>
-
-                        <ul class="list-disc pl-5 space-y-2 mt-2">
-                            <li><strong>Дан сонголттой сурагчид</strong>- (${singleChoiceNames}): Ангийн үйл ажиллагаанд хосоор болон жижиг бүлгээр ажиллуулах.</li>
-                            <li><strong>Олон сонголт авсан сурагчид</strong>- (${manyChoiceNames}): "Бүлгийн холбооны гүүр болгох", "Үе тэнгийнхэн, анги хамт олондоо нөлөөлөх" гэх мэт зорилгоор бүлэг зохион байгуулах.</li>
-                            <li><strong>Огт сонголтгүй сурагчид</strong>- (${isolatedNames}): Байгаа бөгөөд тэдгээрийг бүлэгт татан оруулах, хамт олонтойгоо холбоо тогтооход дэмжлэг үзүүлэх шаардлагатай.</li>
-                            <li><strong>Манлайлагч сурагчид</strong>- (${leaderNames}): Нь анги хамт олныхоо хүндэтгэлийг хүлээж, олон сонголт авсан бөгөөд тэдний нөлөөг бүтээлчээр ашиглаж, бүлгийн идэвхтэй ажиллагаанд оролцуулах нь зүйтэй.</li>
+                        <ul class="list-disc pl-5 space-y-1.5 mt-2">
+                            <li><strong>Огт сонголтгүй / Тусгаарлагдсан сурагчид (${isolatedNames}):</strong> Байгаа бөгөөд тэдгээрийг бүлэгт татан оруулах, хамт олонтойгоо холбоо тогтооход дэмжлэг үзүүлэх шаардлагатай.</li>
+                            <li><strong>Манлайлагч / Олон сонголттой сурагчид (${leaderNames}):</strong> Анги хамт олныхоо хүндэтгэлийг хүлээсэн бөгөөд тэдний эерэг нөлөөг ашиглан бүлгийн идэвхтэй ажиллагааг чиглүүлэх нь зүйтэй.</li>
+                            <li><strong>Дан сонголттой сурагчид (${singleChoiceNames}):</strong> Хосоор ажиллуулах дасгал даалгавраар харилцааг нь өгөгдөх.</li>
                         </ul>
                     </div>
                 </div>
             `;
         }
 
-        // History Management
+        function exportToWord() {
+            const className = document.getElementById('className').value || 'Социометрийн_Тайлан';
+
+            const wordContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset='utf-8'><title>Тайлан</title>
+                <style>
+                    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; }
+                    h2 { color: #1e3a8a; }
+                    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+                    th, td { border: 1px solid #93c5fd; padding: 6px; text-align: center; }
+                    th { background-color: #eff6ff; }
+                </style>
+                </head>
+                <body>
+                    ${document.getElementById('reportOutput').innerHTML}
+                    <br/>
+                    ${document.getElementById('matrixGroupAnalysis').innerHTML}
+                    <br/>
+                    ${document.getElementById('conclusionSection').innerHTML}
+                    <br/><br/>
+                    <p><b>Тайлан боловсруулсан:</b> Сэтгэл зүйч Н.Анударь</p>
+                    <p><b>Танилцсан АУБ:</b> /.................................................../</p>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff', wordContent], {
+                type: 'application/msword'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${className}_Социометрийн_Тайлан.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
         function saveCurrentToHistory() {
             const className = document.getElementById('className').value || 'Анги';
             const history = JSON.parse(localStorage.getItem('socio_history') || '[]');
@@ -621,12 +730,15 @@
                 return;
             }
             container.innerHTML = history.map((item, index) => `
-                <div class="p-4 border rounded-xl flex justify-between items-center bg-gray-50">
+                <div class="p-4 border rounded-xl flex justify-between items-center bg-gray-50 mb-2">
                     <div>
                         <div class="font-bold text-sm text-gray-800">${item.className}</div>
                         <div class="text-xs text-gray-500">${item.date} | Нийт сурагч: ${item.students.length}</div>
                     </div>
-                    <button onclick="restoreHistory(${index})" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold">Ачаалах</button>
+                    <div class="flex gap-2">
+                        <button onclick="restoreHistory(${index})" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold">Ачаалах</button>
+                        <button onclick="deleteHistory(${index})" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-semibold">Устгах</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -640,6 +752,15 @@
             renderStudentTable();
             alert('Судалгаа амжилттай сэргээгдлээ!');
             switchTab(1);
+        }
+
+        function deleteHistory(index) {
+            if (confirm('Та энэ судалгааны түүхийг устгахдаа итгэлтэй байна уу?')) {
+                let history = JSON.parse(localStorage.getItem('socio_history') || '[]');
+                history.splice(index, 1);
+                localStorage.setItem('socio_history', JSON.stringify(history));
+                loadHistoryUI();
+            }
         }
     </script>
 </body>
