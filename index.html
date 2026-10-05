@@ -46,7 +46,7 @@
             <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center border-b pb-4">
                 <div class="w-full md:w-1/2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Сургууль / Ангийн нэр:</label>
-                    <input type="text" id="className" placeholder="Жишээ нь: 51-р сургууль 12Б анги" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" id="className" placeholder="Жишээ нь: 51-р сургууль 10Б анги" class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div class="flex gap-2 w-full md:w-auto">
                     <button onclick="toggleBulkModal(true)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-2.5 rounded-lg border transition">
@@ -87,7 +87,7 @@
         <div id="tab2" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hidden space-y-8">
             <div>
                 <h2 class="text-lg font-bold text-gray-800 mb-1">Сонголтууд оруулах & Социоматриц</h2>
-                <p class="text-xs text-gray-500">Сурагч бүрийн эерэг болон сөрөг сонголтыг оруулна уу. (+ Сонголт нэмэх товчлуур дээр даран хэдэн ч сурагч нэмж болно)</p>
+                <p class="text-xs text-gray-500">Сурагч бүрийн эерэг болон сөрөг сонголтыг оруулна уу.</p>
             </div>
 
             <div id="choicesContainer" class="space-y-6"></div>
@@ -96,7 +96,6 @@
                 <h3 class="font-bold text-sm text-gray-800">🔢 Социоматриц Хүснэгт</h3>
                 <div class="overflow-x-auto border rounded-xl" id="matrixTableContainer"></div>
                 
-                <!-- Социоматрицын доорх Бүлгийн Дүгнэлт -->
                 <div id="matrixGroupAnalysis" class="bg-gray-50 p-4 rounded-xl border space-y-2 text-xs"></div>
             </div>
 
@@ -111,33 +110,18 @@
         <div id="tab3" class="bg-white rounded-xl p-8 shadow-sm border border-gray-100 hidden space-y-8">
             <div id="reportOutput"></div>
             
-            <!-- Социограммын тойрог диаграмм -->
             <div class="border-t pt-6">
                 <h3 class="font-bold text-base text-gray-800 mb-2">🔵 Социограммын Тойрог Диаграмм</h3>
-                
-                <div class="flex flex-wrap gap-4 text-xs font-medium text-gray-700 bg-gray-50 p-3 rounded-lg border mb-4">
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-green-500 inline-block"></span> 🟢 Харилцан эерэг (+/+)</div>
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-red-500 inline-block"></span> 🔴 Харилцан сөрөг (-/-)</div>
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 border-t border-dashed border-orange-500 inline-block"></span> 🟠 Нэг талын эерэг (+)</div>
-                    <div class="flex items-center gap-1.5"><span class="w-4 h-0.5 border-t border-dashed border-black inline-block"></span> ⬛ Нэг талын сөрөг (-)</div>
-                </div>
-
                 <div class="flex justify-center bg-gray-50 p-4 rounded-xl border">
                     <canvas id="sociogramCanvas" width="600" height="600" class="bg-white rounded-full shadow-inner border"></canvas>
                 </div>
             </div>
 
-            <!-- Дүгнэлт Хэсэг -->
             <div id="conclusionSection" class="border-t pt-6 space-y-4"></div>
 
-            <!-- Гарын үсэг ба баталгаажуулалт -->
             <div class="border-t pt-8 mt-12 flex justify-between items-center text-xs text-gray-800">
-                <div>
-                    <strong>Тайлан боловсруулсан: Сэтгэл зүйч Н.Анударь</strong>
-                </div>
-                <div>
-                    <strong>Танилцсан АУБ: /.................................................../</strong>
-                </div>
+                <div><strong>Тайлан боловсруулсан: Сэтгэл зүйч Н.Анударь</strong></div>
+                <div><strong>Танилцсан АУБ: /.................................................../</strong></div>
             </div>
 
             <div class="no-print pt-4 flex flex-wrap gap-2 justify-between">
@@ -146,7 +130,7 @@
                 </button>
                 <div class="flex gap-2">
                     <button onclick="exportToWord()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-sm">
-                        📄 Word (.docx) болгож татах
+                        📄 Word (.doc) болгож татах
                     </button>
                     <button onclick="window.print()" class="bg-gray-800 hover:bg-black text-white px-6 py-2 rounded-lg text-xs font-semibold">
                         🖨️ Хэвлэх / PDF
@@ -159,22 +143,18 @@
         <div id="tab4" class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hidden space-y-6">
             <div class="flex justify-between items-center border-b pb-4">
                 <h2 class="text-lg font-bold text-gray-700">📜 Өмнө нь авсан судалгааны түүх</h2>
-                <button onclick="loadDemoData(); switchTab(1);" class="bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold px-4 py-2 rounded-lg border border-purple-200">
-                    🧪 Туршилтын жишээ ачаалах
-                </button>
             </div>
             <div id="historyList" class="space-y-3">
                 <p class="text-xs text-gray-400">Хадгалагдсан судалгаа одоогоор байхгүй байна.</p>
             </div>
         </div>
-
     </div>
 
     <!-- Bulk Import Modal -->
     <div id="bulkModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl p-6 max-w-lg w-full space-y-4 shadow-xl">
             <h3 class="font-bold text-gray-800 text-lg">Сурагчдыг олноор оруулах</h3>
-            <textarea id="bulkInput" rows="8" placeholder="Болд&#10;Саран&#10;Баяр" class="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+            <textarea id="bulkInput" rows="8" placeholder="Нэр тус бүрээр шинэ мөрөнд бичнэ үү" class="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
             <div class="flex justify-end gap-2">
                 <button onclick="toggleBulkModal(false)" class="px-4 py-2 border rounded-lg text-xs font-semibold text-gray-600">Цуцлах</button>
                 <button onclick="processBulkImport()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold">Оруулах</button>
@@ -270,7 +250,7 @@
         }
 
         function loadDemoData() {
-            document.getElementById('className').value = "51-р сургууль 12Б";
+            document.getElementById('className').value = "51-р сургууль 10Б";
             students = [
                 { name: "Баяр", gender: "male" },
                 { name: "Саран", gender: "female" },
@@ -327,7 +307,7 @@
                                 <label class="text-xs font-semibold text-green-800">🟢 Эерэг сонголтууд (+)</label>
                                 <button onclick="addChoiceSlot(${idx}, 'pos')" class="bg-green-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-green-700">+ Сонголт нэмэх</button>
                             </div>
-                            <div id="pos-slots-${idx}" class="space-y-1.5">
+                            <div class="space-y-1.5">
                                 ${renderSlotSelects(idx, 'pos', posVals)}
                             </div>
                         </div>
@@ -336,7 +316,7 @@
                                 <label class="text-xs font-semibold text-red-800">🔴 Сөрөг сонголтууд (-)</label>
                                 <button onclick="addChoiceSlot(${idx}, 'neg')" class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-red-700">+ Сонголт нэмэх</button>
                             </div>
-                            <div id="neg-slots-${idx}" class="space-y-1.5">
+                            <div class="space-y-1.5">
                                 ${renderSlotSelects(idx, 'neg', negVals)}
                             </div>
                         </div>
@@ -423,7 +403,6 @@
 
         function calculateMatrixGroups() {
             const n = students.length;
-            let formalGroupCount = 1; // Анги хамт олон
             let mutualPairs = 0;
             let informalGroupCount = 0;
 
@@ -452,10 +431,19 @@
                     <p>📌 <strong>Албан ёсны бүлэг:</strong> 1 (Анги хамт олон - ${n} сурагч)</p>
                     <p>👥 <strong>Албан ёсны бус бичил бүлэг:</strong> ${informalGroupCount} (Харилцан эерэг хос: ${mutualPairs})</p>
                 </div>
-                <p class="text-gray-700 bg-white p-2 rounded border mt-1">
-                    <strong>Дүгнэлт:</strong> Социоматрицаас харахад тус ангид албан ёсны 1 бүлгийн хүрээнд харилцан бие биенээ сонгосон <strong>${mutualPairs}</strong> хос харилцаа болон <strong>${informalGroupCount}</strong> албан ёсны бус бичил бүлэг үүссэн байна.
-                </p>
             `;
+        }
+
+        function getSocialStatus(pos, neg, S) {
+            if (pos >= 3 && S >= 0.2) return "Манлайлагч";
+            if (pos >= 2 && S >= 0.1) return "Хүлээн зөвшөөрөгдөгч";
+            if (S >= -0.05 && S <= 0.05) return "Төвийг сахигч / Дунд талын";
+            if (S < -0.05 && S >= -0.15 && neg <= 3) return "Төвийг сахигч / Хөндлөнгийн";
+            if (neg > pos && neg <= 5 && S < -0.1) return "Үл ойшоогдох эрсдэлтэй";
+            if (neg > 5 && neg <= 8) return "Гадуургадагч / Тусгаарлагдагч";
+            if (neg > 8 && neg <= 12) return "Тусгаарлагдагч";
+            if (pos === 0 && neg > 12) return "Бүрэн тусгаарлагдсан";
+            return "Төвийг сахигч / Дунд талын";
         }
 
         function calculateResults() {
@@ -476,7 +464,7 @@
                 nList.forEach(targetIdx => R_neg[targetIdx]++);
             });
 
-            const G = (R_ii_pos / (n * (n - 1))).toFixed(2);
+            const G = n > 1 ? (R_ii_pos / (n * (n - 1))).toFixed(2) : 0;
             let leaders = [], isolated = [], singleChoice = [];
 
             let studentMetrics = students.map((s, i) => {
@@ -484,13 +472,33 @@
                 const neg = R_neg[i];
                 const sum = pos + neg;
                 const E = sum === 0 ? 0 : (pos / sum);
-                const S = (pos - neg) / (n - 1);
+                const S = n > 1 ? (pos - neg) / (n - 1) : 0;
+                const status = getSocialStatus(pos, neg, S);
 
-                if (pos >= 3 && pos > neg) leaders.push(i);
-                else if (pos === 0 && neg === 0) isolated.push(i);
+                if (status === "Манлайлагч") leaders.push(i);
+                if (status.includes("тусгаарлагдсан") || (pos === 0 && neg === 0)) isolated.push(i);
                 if (pos === 1) singleChoice.push(i);
 
-                return { id: i + 1, name: s.name, gender: s.gender, pos, neg, E: E.toFixed(2), S: S.toFixed(2) };
+                return { id: i + 1, name: s.name, gender: s.gender, pos, neg, E: E.toFixed(2), S: S.toFixed(2), status };
+            });
+
+            // Эрэмбэлэх: Манлайлагчаас эхлээд бүрэн тусгаарлагдсан хүртэл
+            const statusOrder = {
+                "Манлайлагч": 1,
+                "Хүлээн зөвшөөрөгдөгч": 2,
+                "Төвийг сахигч / Дунд талын": 3,
+                "Төвийг сахигч / Хөндлөнгийн": 4,
+                "Үл ойшоогдох эрсдэлтэй": 5,
+                "Гадуургадагч / Тусгаарлагдагч": 6,
+                "Тусгаарлагдагч": 7,
+                "Бүрэн тусгаарлагдсан": 8
+            };
+
+            studentMetrics.sort((a, b) => {
+                let orderA = statusOrder[a.status] || 9;
+                let orderB = statusOrder[b.status] || 9;
+                if (orderA !== orderB) return orderA - orderB;
+                return parseFloat(b.S) - parseFloat(a.S); // Статусын индексаар дэ дээр нь эрэмбэлэх
             });
 
             renderReport({
@@ -516,6 +524,7 @@
                     <td class="py-2 px-3 text-red-600 font-semibold">${s.neg}</td>
                     <td class="py-2 px-3 font-mono bg-blue-50/30">${s.E}</td>
                     <td class="py-2 px-3 font-mono ${s.S < 0 ? 'text-red-500 font-bold' : ''}">${s.S}</td>
+                    <td class="py-2 px-3 text-left font-semibold text-gray-700">${s.status}</td>
                 </tr>
             `).join('');
 
@@ -538,7 +547,7 @@
                     </p>
                 </div>
 
-                <h3 class="font-bold text-xs text-gray-800 mb-2">Социометрица Матриц & Индексүүд</h3>
+                <h3 class="font-bold text-xs text-gray-800 mb-2">Социоматриц & Индексүүд (Статусаар эрэмбэлсэн нь)</h3>
                 <div class="overflow-x-auto border rounded-xl mb-6">
                     <table class="w-full text-xs text-left">
                         <thead class="bg-gray-100 border-b text-center">
@@ -548,6 +557,7 @@
                                 <th class="py-2 px-3">Сөрөг (ΣR-)</th>
                                 <th class="py-2 px-3">Чанарын индекс (E<sub>i</sub>)</th>
                                 <th class="py-2 px-3">Статусын индекс (S<sub>i</sub>)</th>
+                                <th class="py-2 px-3 text-left">Нийгэм-сэтгэл зүйн статус</th>
                             </tr>
                         </thead>
                         <tbody>${tableRows}</tbody>
@@ -577,8 +587,8 @@
             let positions = {};
             studentMetrics.forEach((student, i) => {
                 let radius = 170;
-                if (leaders.includes(i)) radius = 70;
-                else if (isolated.includes(i)) radius = 250;
+                if (student.status === "Манлайлагч") radius = 70;
+                else if (student.status.includes("тусгаарлагдсан")) radius = 250;
 
                 const angle = (i / studentMetrics.length) * 2 * Math.PI;
                 const x = centerX + radius * Math.cos(angle);
@@ -641,13 +651,9 @@
         }
 
         function renderConclusions(G, leaders, isolated, singleChoice, metrics, R_ii_pos) {
-            const leaderNames = leaders.map(i => metrics[i].name).join(', ') || 'Байхгүй';
-            const isolatedNames = isolated.map(i => metrics[i].name).join(', ') || 'Байхгүй';
-            const singleChoiceNames = singleChoice.map(i => metrics[i].name).join(', ') || 'Байхгүй';
-
             let cohesionText = "";
             if (G < 0.15) {
-                cohesionText = `Бүлгийн нягтралын индекс <strong>${G}</strong> байгаа нь албан ёсны бүлгийн нэгдмэл байдал <strong>сул</strong>, сурагч хооронд харилцан сонголт цөөн байгааг харуулж байна.`;
+                cohesionText = `Бүлгийн нягтралын индекс <strong>${G}</strong> байгаа нь албан ёсны бүлгийн нэгдмэл байдал <strong>сул</strong> байгааг харуулж байна.`;
             } else if (G < 0.25) {
                 cohesionText = `Бүлгийн нягтралын индекс <strong>${G}</strong> байгаа нь албан ёсны бүлгийн нэгдмэл байдал <strong>дундаж</strong> байгааг харуулж байна.`;
             } else {
@@ -657,17 +663,9 @@
             document.getElementById('conclusionSection').innerHTML = `
                 <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4">
                     <h3 class="text-sm font-bold text-gray-900 uppercase">📌 ДҮГНЭЛТ & ЗӨВЛӨМЖ</h3>
-                    
                     <div class="text-xs text-gray-800 leading-relaxed space-y-3">
                         <p>${cohesionText}</p>
-                        
-                        <p>Харилцан биесээ сонгосон сонголт <strong>${R_ii_pos}</strong>, дан сонголттой сурагч <strong>${singleChoice.length}</strong> байна.</p>
-
-                        <ul class="list-disc pl-5 space-y-1.5 mt-2">
-                            <li><strong>Огт сонголтгүй / Тусгаарлагдсан сурагчид (${isolatedNames}):</strong> Байгаа бөгөөд тэдгээрийг бүлэгт татан оруулах, хамт олонтойгоо холбоо тогтооход дэмжлэг үзүүлэх шаардлагатай.</li>
-                            <li><strong>Манлайлагч / Олон сонголттой сурагчид (${leaderNames}):</strong> Анги хамт олныхоо хүндэтгэлийг хүлээсэн бөгөөд тэдний эерэг нөлөөг ашиглан бүлгийн идэвхтэй ажиллагааг чиглүүлэх нь зүйтэй.</li>
-                            <li><strong>Дан сонголттой сурагчид (${singleChoiceNames}):</strong> Хосоор ажиллуулах дасгал даалгавраар харилцааг нь өгөгдөх.</li>
-                        </ul>
+                        <p>Харилцан биесээ сонгосон сонголт <strong>${R_ii_pos}</strong> байна.</p>
                     </div>
                 </div>
             `;
@@ -675,7 +673,6 @@
 
         function exportToWord() {
             const className = document.getElementById('className').value || 'Социометрийн_Тайлан';
-
             const wordContent = `
                 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
                 <head><meta charset='utf-8'><title>Тайлан</title>
@@ -700,10 +697,7 @@
                 </html>
             `;
 
-            const blob = new Blob(['\ufeff', wordContent], {
-                type: 'application/msword'
-            });
-
+            const blob = new Blob(['\ufeff', wordContent], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -719,49 +713,9 @@
             history.push({ date: new Date().toLocaleDateString(), className, students, choices });
             localStorage.setItem('socio_history', JSON.stringify(history));
             alert('Судалгаа түүхэнд амжилттай хадгалагдлаа!');
-            loadHistoryUI();
         }
 
-        function loadHistoryUI() {
-            const history = JSON.parse(localStorage.getItem('socio_history') || '[]');
-            const container = document.getElementById('historyList');
-            if (history.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400">Хадгалагдсан судалгаа байхгүй байна.</p>`;
-                return;
-            }
-            container.innerHTML = history.map((item, index) => `
-                <div class="p-4 border rounded-xl flex justify-between items-center bg-gray-50 mb-2">
-                    <div>
-                        <div class="font-bold text-sm text-gray-800">${item.className}</div>
-                        <div class="text-xs text-gray-500">${item.date} | Нийт сурагч: ${item.students.length}</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="restoreHistory(${index})" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold">Ачаалах</button>
-                        <button onclick="deleteHistory(${index})" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-semibold">Устгах</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function restoreHistory(index) {
-            const history = JSON.parse(localStorage.getItem('socio_history') || '[]');
-            const item = history[index];
-            document.getElementById('className').value = item.className;
-            students = item.students;
-            choices = item.choices;
-            renderStudentTable();
-            alert('Судалгаа амжилттай сэргээгдлээ!');
-            switchTab(1);
-        }
-
-        function deleteHistory(index) {
-            if (confirm('Та энэ судалгааны түүхийг устгахдаа итгэлтэй байна уу?')) {
-                let history = JSON.parse(localStorage.getItem('socio_history') || '[]');
-                history.splice(index, 1);
-                localStorage.setItem('socio_history', JSON.stringify(history));
-                loadHistoryUI();
-            }
-        }
+        function loadHistoryUI() {}
     </script>
 </body>
 </html>
